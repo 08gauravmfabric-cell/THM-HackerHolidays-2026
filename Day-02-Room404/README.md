@@ -90,7 +90,7 @@ This gives us full access to the Git object store.
 ---
 
 ### Step 4 — Explore Git Objects
-![Git objects](screenshots/Index-of-g-obj.png )
+![Git objects](screenshots/Index-of-gbbb.png )
 
 Navigate to:
 
