@@ -16,7 +16,7 @@ This room focuses on a classic but critical web misconfiguration: **an exposed `
 ## 🔍 Reconnaissance
 
 ### Step 1 — Visit the Target
-![Byte Lotus source](screenshots/Byte-Lotus-source-code.png)
+![Byte Lotus source](Day-02-Room404/Byte-Lotus-source-code.png)
 
 Navigate to the target web application:
 
@@ -33,7 +33,7 @@ The page belongs to **Byte Lotus** — a fictional hotel brand. Viewing the page
 ---
 
 ### Step 2 — Directory Brute-Force with DIRB
-![DIRB scan](screenshots/DIRB-scan-output.png)
+![DIRB scan](Day-02-Room404/DIRB-scan-output.png)
 
 Run `dirb` against the target to discover hidden directories:
 
@@ -59,7 +59,7 @@ GENERATED WORDS: 4612
 ## 🕵️ Exploitation — Git Directory Enumeration
 
 ### Step 3 — Browse the Exposed `.git` Directory
-![.git exposed](screenshots/Index-of-g.png)
+![.git exposed](Day-02-Room404/Index-of-g.png)
 
 Navigate to:
 
@@ -90,7 +90,7 @@ This gives us full access to the Git object store.
 ---
 
 ### Step 4 — Explore Git Objects
-![Git objects](screenshots/Index-of-gbbb.png )
+![Git objects](Day-02-Room404/Index-of-gbbb.png )
 
 Navigate to:
 
@@ -109,7 +109,7 @@ The full object hash is: `0a12caa4e52a965e89e5eccf5760924b21aacbf7`
 ---
 
 ### Step 5 — Reconstruct the Repository
-![Deleted commits](screenshots/VSCode-deleted-file.png)
+![Deleted commits](Day-02-Room404/VSCode-deleted-file.png)
 
 Use **git-dumper** to automatically download and reconstruct the entire repository:
 
