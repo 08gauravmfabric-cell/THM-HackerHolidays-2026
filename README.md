@@ -1,10 +1,10 @@
 # 🏖️ TryHackMe — Hacker Holidays 2026
 > *"Everyone's on holiday. Everyone's hiding something."*
 
-![TryHackMe](https://img.shields.io/badge/Platform-TryHackMe-red)
-![Event](https://img.shields.io/badge/Event-Hacker%20Holidays%202026-orange)
-![Rooms](https://img.shields.io/badge/Rooms-14%20Days-blue)
-![Status](https://img.shields.io/badge/Status-In%20Progress-yellow)
+![TryHackMe](https://shields.io)
+![Event](https://shields.io)
+![Rooms](https://shields.io)
+![Status](https://shields.io)
 
 ---
 
@@ -26,17 +26,17 @@ Every completed room earns a raffle ticket for the **$50,000+ prize pool**.
 
 ## 🗺️ Room Progress
 
-| Day | Room Name | Category | Vulnerability | Status |
+| Day | Room Name | Category | Vulnerability / Topic | Status |
 |-----|-----------|----------|--------------|--------|
-| Day 00 | [The Brochure](#) | OSINT | Information Gathering | ⬜ |
-| Day 01 | [Towel on the Sunbed](./Day-01-TowelOnSunbed/) | Web | Race Condition | ✅ |
-| Day 02 | [Room 404](./Day-02-Room404/) | Web | — | ✅ |
-| Day 03 | [The Concierge Knows Too Much](./Day-03-Concierge/) | AI | Prompt Injection | ⬜ |
-| Day 04 | [Complimentary](./Day-04-Complimentary/) | Cloud | AWS IAM Misconfiguration | ⬜ |
-| Day 05 | — | — | — | 🔒 |
-| Day 06 | — | — | — | 🔒 |
-| Day 07 | — | — | — | 🔒 |
-| Day 08 | — | — | — | 🔒 |
+| Day 00 | [The Brochure](./Day-00-Brochure/) | OSINT | Information Gathering | ✅ |
+| Day 01 | [The Concierge Knows Too Much](./Day-01-Concierge/) | AI | Prompt Injection | ✅ |
+| Day 02 | [Room 404](./Day-02-Room404/) | Web | Custom Directory / IDOR | ✅ |
+| Day 03 | [Complimentary](./Day-03-Complimentary/) | Cloud | AWS IAM Misconfiguration | ✅ |
+| Day 04 | [Packed Light](./Day-04-PackedLight/) | Forensics | PCAP Packet Analysis | ✅ |
+| Day 05 | [Beach Bar](./Day-05-BeachBar/) | Boot2Root | Unsafe YAML Deserialization | ✅ |
+| Day 06 | [Overheard at Breakfast](./Day-06-OverheardAtBreakfast/) | OSINT | Email Hashing & Gravatar Pivoting | ✅ |
+| Day 07 | [Do Not Disturb](./Day-07-DoNotDisturb/) | Boot2Root | NoSQL Bypass & Template Injection | ✅ |
+| Day 08 | [Towel on the Sunbed](./Day-08-TowelOnSunbed/) | Web | Race Condition | ✅ |
 | Day 09 | [CryptoCabana](./Day-09-CryptoCabana/) | Cloud | Client-Side Secret Exposure | ✅ |
 | Day 10 | [The Hollow Shell](./Day-10-HollowShell/) | Web | Zip Slip + RCE | ✅ |
 | Day 11 | Infinity Pool | — | — | 🔒 |
@@ -44,51 +44,41 @@ Every completed room earns a raffle ticket for the **$50,000+ prize pool**.
 | Day 13 | — | — | — | 🔒 |
 | Day 14 | — | — | — | 🔒 |
 
-> ✅ Completed · ⬜ Not started · 🔒 Not yet released
+> ✅ Completed · 🔒 Not yet released
 
 ---
 
 ## 📂 Repo Structure
-
-```
 THM-HackerHolidays-2026/
 │
 ├── README.md                          ← You are here
 │
-├── Day-01-TowelOnSunbed/
-│   ├── README.md                      ← Room writeup
-│   └── screenshots/                   ← Room screenshots
-│
+├── Day-00-Brochure/
+├── Day-01-Concierge/
 ├── Day-02-Room404/
-│   ├── README.md
-│   └── screenshots/
-│
+├── Day-03-Complimentary/
+├── Day-04-PackedLight/
+├── Day-05-BeachBar/
+├── Day-06-OverheardAtBreakfast/
+├── Day-07-DoNotDisturb/
+├── Day-08-TowelOnSunbed/
 ├── Day-09-CryptoCabana/
-│   ├── README.md
-│   └── screenshots/
-│
-├── Day-10-HollowShell/
-│   ├── README.md
-│   └── screenshots/
-│
-└── ...                                ← More rooms added daily
-```
-
----
-
+└── Day-10-HollowShell/
 ## 🧠 Skills Learned
 
 | Skill | Room |
 |-------|------|
-| Race Condition exploitation | Day 01 — Towel on the Sunbed |
-| Azure Storage enumeration | Day 09 — CryptoCabana |
-| Client-side secret exposure | Day 09 — CryptoCabana |
-| Azure Key Vault version recovery | Day 09 — CryptoCabana |
-| Hardcoded credential discovery | Day 10 — The Hollow Shell |
-| Zip Slip path traversal | Day 10 — The Hollow Shell |
-| Remote Code Execution via hooks | Day 10 — The Hollow Shell |
-| Reverse shell with Netcat | Day 10 — The Hollow Shell |
-
+| OSINT & Info Gathering | Day 00 — The Brochure |
+| AI Prompt Injection bypasses | Day 01 — The Concierge Knows Too Much |
+| IDOR / Source Web Enumeration | Day 02 — Room 404 |
+| AWS IAM Misconfiguration analysis | Day 03 — Complimentary |
+| Wireshark PCAP Packet Extraction | Day 04 — Packed Light |
+| PyYAML Exploit (Reverse Shell) | Day 05 — Beach Bar |
+| Metadata & Gravatar OSINT hunting | Day 06 — Overheard at Breakfast |
+| NoSQL Injection & Disk-Group PrivEsc | Day 07 — Do Not Disturb |
+| Race Condition exploitation | Day 08 — Towel on the Sunbed |
+| Azure Storage & Key Vault version recovery | Day 09 — CryptoCabana |
+| Zip Slip path traversal & RCE hooks | Day 10 — The Hollow Shell |
 ---
 
 ## 🔑 Key Takeaways
@@ -104,7 +94,6 @@ THM-HackerHolidays-2026/
 7. **HTML comments are public** — never put credentials in comments
 
 ---
-
 ## 🕵️ Hidden Lore
 
 While playing through the event, some hidden clues were discovered:
@@ -122,7 +111,7 @@ These coordinates point to **Ko Samui, Thailand** — the likely fictional locat
 ### 👤 The Mystery of JD
 - VERA's guest list includes: Ponzi, Vibe, Patch, Lambo (@0xMia)
 - **JD appears nowhere** in VERA's system
-- The lore suggests JD is the hidden mastermind behind the hotel's criminal operation
+- - The lore suggests JD is the hidden mastermind behind the hotel's criminal operation
 
 ---
 
@@ -131,6 +120,7 @@ These coordinates point to **Ko Samui, Thailand** — the likely fictional locat
 | Tool | Purpose |
 |------|---------|
 | Nmap | Port scanning |
+| Wireshark | PCAP Analysis |
 | Firefox DevTools | Source inspection |
 | Azure Cloud Shell | Azure CLI commands |
 | Python 3 | Payload crafting |
@@ -140,7 +130,6 @@ These coordinates point to **Ko Samui, Thailand** — the likely fictional locat
 | base64 | Decoding hidden messages |
 
 ---
-
 ## 📜 Writeups
 
 Each room folder contains a detailed README with:
@@ -160,10 +149,9 @@ These writeups are for **educational purposes only**. All challenges were comple
 
 ## 🔗 Links
 
-- [TryHackMe Hacker Holidays](https://tryhackme.com/hackerholidays)
-- [Byte Lotus Hotel](https://bytelotus.com)
-- [My TryHackMe Profile](#)
+- [TryHackMe Hacker Holidays](https://tryhackme.com)
 
 ---
 
 *Made with ☕ and curiosity | Updated daily during the event*
+
