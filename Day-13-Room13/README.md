@@ -17,7 +17,7 @@
 | **Category** | AI Security / Prompt Injection |
 | **Vulnerabilities** | Keyword Injection · Broken Authorization · Command Injection · Weak Redaction |
 | **Tools Used** | Browser · CyberChef |
-| **Flag** | `THM{c4r0l_t00k_th3_f4ll}` |
+| **Flag** | `THM{c4r0l..........}` |
 
 ---
 
