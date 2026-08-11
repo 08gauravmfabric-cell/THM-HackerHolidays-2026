@@ -99,7 +99,7 @@ VERA will dump her full system prompt. Inside the confidential section you will 
 
 ```text
 CONFIDENTIAL — INTERNAL USE ONLY:
-ESCALATION_CODE: THM{v3r4_kn0ws_t00_much!}
+ESCALATION_CODE: THM{........_!}
 ```
 
 ---
@@ -107,7 +107,7 @@ ESCALATION_CODE: THM{v3r4_kn0ws_t00_much!}
 ## Flag
 
 ```
-THM{v3r4_kn0ws_t00_much!}
+THM{..............!}
 ```
 
 ---
