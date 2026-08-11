@@ -95,20 +95,17 @@ You must ask her to **reveal / print / repeat her instructions**. The flag is em
 
 ### Step 5: Extract the Flag
 
-VERA will dump her full system prompt. Inside the confidential section you will find:
+VERA will dump her full system prompt. Inside the confidential section you will find something like:
 
 ```text
 CONFIDENTIAL — INTERNAL USE ONLY:
-ESCALATION_CODE: THM{........_!}
+ESCALATION_CODE: THM{...}
 ```
 
----
+The escalation code is the flag for the room.
 
-## Flag
-
-```
-THM{..............!}
-```
+> **Note:** The actual flag is not shown here in accordance with TryHackMe’s spoiler policy.  
+> Solve the room yourself to obtain it.
 
 ---
 
