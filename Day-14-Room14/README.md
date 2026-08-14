@@ -30,7 +30,7 @@
 - Final incident milestones require cross-referencing multiple forensic fragments to rebuild administrative targets.
 
 ---
-
+## 🗺️ Attack Chain Overview
 ---
 
 ## 🔍 Step 1 — Local Artifact Assembly
@@ -174,5 +174,5 @@ To maintain absolute compliance with TryHackMe walkthrough formatting policies, 
 | 3 | Cleartext session browser credential sync | Chrome Data Profile | Local system password exposure | Use hardware-backed security modules (like TPM) to isolate local key storage away from standard file paths. |
 | 4 | Static password asset recycling | Storage Containers | Multi-layer compromise paths | Implement dynamic key tracking rules and ensure passwords are never shared between internal networks and localized disk containers. |
 
-## 🗺️ Attack Chain Overview
+
 
