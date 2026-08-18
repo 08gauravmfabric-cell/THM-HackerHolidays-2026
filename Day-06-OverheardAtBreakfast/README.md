@@ -1,97 +1,209 @@
-# Deep Dive Analysis — TryHackMe Hacker Holidays: Day 6 (Overheard at Breakfast)
+# 🍳 Overhead Breakfast — TryHackMe Hacker Holidays 2026
 
-## 📖 Introduction & Scenario Context
-Day 6 shifts focus away from active infrastructure exploitation into **Open-Source Intelligence (OSINT)** and **Social Media Hashing**. The narrative unfolds at the breakfast terrace of the Byte Lotus Hotel, where a guest captures a raw screenshot of a text message conversation between two individuals named "Ponzi" and "Lambo". 
-
-One of the users has claims of completely wiping their presence from the internet. This forensic write-up documents the comprehensive, step-by-step metadata verification, text extraction, profile profiling via Gravatar, and cryptographic string analysis required to discover the hidden target account and capture the flag.
+> **Day 6 of the Hacker Holidays 2026 event**
+> Category: OSINT | Difficulty: Easy
 
 ---
 
-## 🛠️ Step 1: Initial Artifact Analysis & Metadata Verification
-We begin the investigation by downloading the provided zipped task file and confirming the baseline integrity of the image payload.
+## 📋 Room Summary
 
-1. **Extracting the Archive:** Unzip the downloaded room file locally on your forensic analyst machine:
-   ```bash
-   unzip overheard_at_breakfast.zip
-   ```
-2. **Reviewing Image Metadata:** Run `ExifTool` against the extracted PNG screenshot file to check for hidden geolocation data, modification timestamps, or structural software tags left behind during creation:
-   ```bash
-   exiftool conversation_leak.png
-   ```
-3. **Steganographic Check:** Rule out standard low-level data hiding techniques by running `zsteg` to review LSB (Least Significant Bit) channels for buried hexadecimal or string sequences:
-   ```bash
-   zsteg conversation_leak.png
-   ```
+| Field | Details |
+|---|---|
+| **Room Name** | Overhead Breakfast |
+| **Event** | TryHackMe Hacker Holidays 2026 |
+| **Difficulty** | Easy |
+| **Type** | OSINT / Social Media Investigation |
+| **Skills** | Email OSINT, Gravatar, Base64 Decoding |
+| **Flag** | ✅ Captured |
 
 ---
 
-## 🔍 Step 2: Manual Conversation Inspection & OCR Extraction
-After confirming that no file-level hidden elements are present, we look closely at the visible conversational exchange displayed inside the image canvas.
+## 🗺️ Attack Chain Overview
 
-1. **Textual Content Reading:** Reviewing the text exchange reveals Lambo discussing a specific, highly identifying communication artifact: a unique personal corporate email address.
-2. **Extracting Text cleanly:** To copy the text from the pixel matrix without manual typing errors, use an Optical Character Recognition (**OCR**) tool or utility:
-   ```bash
-   tesseract conversation_leak.png stdout
-   ```
-3. **Isolating the Indicator of Compromise (IoC):** Jot down the target email address exactly as printed in the conversation thread, ensuring all characters match casing guidelines:
-   - Target Identified: `lambo_investor_99@bytelotus.thm` *(Example target format structure)*
-
----
-
-## 🌐 Step 3: Platform Identification & Social Media Hashing
-During the chat logs, the user references a universal profile platform used to unify public avatars, descriptions, and verified online social identities. This is identified as **Gravatar**.
-
-### Understanding Gravatar's Architecture
-Gravatar does not allow global profile lookups using plaintext email addresses via standard search bars. Instead, it utilizes an address mapping system dependent on **cryptographic hashing**.
-* To query the profile API database endpoint, the email address must be converted into a single **MD5 string hash**.
-* **Pre-processing Requirement:** The email string must be completely lowercase, and any trailing spaces must be cut before compiling the hash.
-
-### Generating the Compliant MD5 Hash
-Run a pipeline bash script sequence to normalize the email handle and calculate its true cryptographic hash output:
-```bash
-echo -n "lambo_investor_99@bytelotus.thm" | tr '[:upper:]' '[:lower:]' | md5sum
 ```
-* `-n`: Prevents a hidden trailing newline character `\n` from corrupting the input block.
-* `tr '[:upper:]' '[:lower:]'`: Strictly guarantees compliance with lowercase format requirements.
-
-Take the resulting output string (e.g., `4a3b2c...`) to formulate the public directory tracking link.
-
----
-
-## 🚀 Step 4: Tracking the Hidden Account Profile
-With the finalized MD5 identifier generated, we execute our open-source intelligence lookup pipeline against the primary live infrastructure directory.
-
-1. **Crafting the Endpoint Path:** Construct the lookup URL template by appending the custom hash directly to the master directory tracking path:
-   - Path Template: `https://gravatar.com<YOUR_GENERATED_MD5_HASH>.json`
-2. **Querying the Directory:** Submit the connection request via browser navigation or use `curl` to capture the profile details cleanly from your command line interface:
-   ```bash
-   curl -s https://gravatar.com4a3b2cb9e8...json | jq
-   ```
-3. **Analyzing Content Output:** The lookup returns an authenticated, active profile mapping structure. Open the `profileUrl` or look at the `aboutMe` text bio block.
-4. **Locating the Hidden Payload:** Inside the user's bio profile data, we observe an anomalies string sequence structured precisely inside a Base64 encoding configuration envelope.
+Task Files Downloaded
+    └─► Conversation Screenshot Analysis
+            └─► Email Address Extracted
+                    └─► lambobytelotushotel@gmail.com
+                            └─► Epieos Reverse Email Lookup
+                                    └─► Google Account Found
+                                            └─► Gravatar Profile Discovered
+                                                    └─► Base64 Encoded Prize String
+                                                            └─► CyberChef Decode
+                                                                    └─► Flag ✅
+```
 
 ---
 
-## 🔓 Step 5: Decoding the Target Payload
-We push the discovered target configuration data string back into our local terminal framework to parse out the underlying flag values safely.
+## 🔍 Step-by-Step Walkthrough
 
-1. **Isolate Payload Block:** Copy the raw string segment retrieved out of the user's bio entry field.
-2. **Execute Terminal Reversal:** Pass the payload string directly into the base64 operating framework utility:
-   ```bash
-   echo "VUhNZ2RHOXpaV0YwWlhKekxuaDBiVzB9..." | base64 -d
-   ```
+### Step 1: Download and Analyze Task Files
 
-The operational interface decodes the base data, immediately resolving into the structured format block expected by the assessment engine.
+The room provides a downloadable task file containing a **screenshot of a conversation** between two guests at the Byte Lotus Hotel — Ponzi (an influencer) and Lambo.
 
----
+**Key details from the conversation:**
+- Lambo mentions staying at **Byte Lotus Hotel**
+- Lambo mentions using a free tool "starting with G" to link social media accounts
+- Lambo provides their email: **`lambobytelotushotel@gmail.com`**
+- Lambo mentions they "wiped everything" from their social media
 
-## 🏁 Flag Capture
-To explicitly uphold TryHackMe's anti-cheating, solution-protection, and deployment guidelines, literal flag outputs are completely omitted below:
-
-* **Flag:** `THM{REDACTED_GRAVATAR_OSINT_IDENTITY_DISCOVERED}`
+> 💡 **Clue:** "Started with a G if I remember correctly" → **Gravatar** (a profile service starting with G that links email to social accounts)
 
 ---
 
-## 🛡️ Strategic Mitigation Actions
-* **Enforce Email Hashing Privacy:** While MD5 hashes obscure raw email addresses, they are incredibly susceptible to brute-force or pre-computed rainbow table lookups. Sensitive corporate accounts should never be mapped to public directory trackers like Gravatar.
-* **Control Corporate Digital Footprints:** Security teams must implement continuous OSINT tracking and external asset audits. This ensures employees do not create public developer profiles linking private internal operational domains to outside web nodes.
+### Step 2: Email OSINT with Epieos
+
+Using the email address found in the conversation, we performed a **reverse email lookup** using Epieos:
+
+```
+Target Email: lambobytelotushotel@gmail.com
+Tool: https://epieos.com
+```
+
+**Results from Epieos:**
+
+| Service | Finding |
+|---|---|
+| Google Account ID | `109541557676124188877` |
+| Google Maps | Profile with contributions |
+| Google Calendar | Public calendar link |
+| Google Plus Archive | Wayback Machine archive |
+
+---
+
+### Step 3: Gravatar Profile Discovery
+
+Since Lambo mentioned a tool "starting with G" that links accounts via email/profile, we searched **Gravatar** — a service that creates a global profile linked to an email address:
+
+```
+https://gravatar.com/lambobytelotushotel
+```
+
+or search by email hash on Gravatar's lookup:
+
+```
+https://en.gravatar.com/emails/
+```
+
+**Gravatar Profile Found:**
+- **Name:** Lambo
+- **Bio:** Lam-boh · Byte Lotus Hotel
+- **Prize:** A Base64 encoded string hidden in the profile bio!
+
+```
+VEhNe1MzY3JIVF9QcjBmaWwzX0g0c19iMzNuX0lkZW50MWZpM2R9
+```
+
+---
+
+### Step 4: Decode the Flag with CyberChef
+
+The prize string is **Base64 encoded**. Decode it using CyberChef or the command line:
+
+**Using CyberChef:**
+1. Go to `https://gchq.github.io/CyberChef/`
+2. Paste the string in the Input box
+3. Search for **"From Base64"** recipe
+4. Apply and read the output
+
+**Using command line:**
+```bash
+echo "VEhNe1MzY3JIVF9QcjBmaWwzX0g0c19iMzNuX0lkZW50MWZpM2R9" | base64 -d
+```
+
+**Result:**
+```
+THM{S3cr3T_Pr0fil3_H4s_b33n_Id3nt1fi3d}
+```
+
+---
+
+## 🧠 OSINT Techniques Used
+
+| Technique | Tool | Purpose |
+|---|---|---|
+| Reverse Email Lookup | Epieos | Find linked accounts from email |
+| Google Account Enumeration | Epieos | Find Google ID and services |
+| Gravatar Profile Search | gravatar.com | Find linked profile with hidden data |
+| Base64 Decoding | CyberChef / bash | Decode the prize string |
+
+---
+
+## 💡 Key OSINT Principles Demonstrated
+
+### 1. Email as an Identity Anchor
+An email address is one of the most powerful OSINT pivot points. A single email can link to:
+- Google account and all its services
+- Gravatar profile
+- Social media accounts
+- Data breach records
+
+### 2. "Deleted" Doesn't Mean Gone
+Lambo said they "wiped everything" — but:
+- Gravatar profiles persist even after social media deletion
+- Google accounts retain Maps contributions, calendar links
+- Wayback Machine archives content from Google Plus
+
+### 3. Profile Services as Hidden Data Stores
+Services like Gravatar are often overlooked in OSINT investigations but can contain:
+- Real names and usernames
+- Linked social accounts
+- Bio information and sometimes hidden messages
+
+---
+
+## 🛡️ Lessons Learned
+
+1. **Email addresses are identity anchors** — never share your real email publicly if you want anonymity.
+2. **"Deleting" social media doesn't remove all traces** — profile services, archives, and linked accounts persist.
+3. **Gravatar links your email to a public profile** — this is searchable and indexable by default.
+4. **Reverse email lookup tools** (Epieos, Holehe) can reveal dozens of linked accounts from a single email.
+5. **Always check the Google Account ID** — it links to Maps, Calendar, and archived Google Plus profiles.
+
+---
+
+## 🔧 Tools Used
+
+| Tool | Purpose | Link |
+|---|---|---|
+| Epieos | Reverse email lookup | https://epieos.com |
+| Gravatar | Profile lookup by email | https://gravatar.com |
+| CyberChef | Base64 decoding | https://gchq.github.io/CyberChef |
+| Google Maps | Check contributions | https://maps.google.com |
+| Wayback Machine | Archive search | https://web.archive.org |
+
+---
+
+## 📸 Screenshots
+
+> *(Add your screenshots here)*
+
+| Screenshot | Description |
+|---|---|
+| `conversation.png` | Task file — conversation between Ponzi and Lambo |
+| `epieos_result.png` | Epieos reverse lookup results |
+| `gravatar_profile.png` | Gravatar profile showing prize string |
+| `cyberchef_decode.png` | CyberChef Base64 decode |
+
+---
+
+## 📁 Files
+
+| File | Description |
+|---|---|
+| `README_OverheadBreakfast.md` | This writeup |
+| `epieos_20260801T163154Z_LambobyteLotusHotel_gmail_com.pdf` | Epieos report |
+
+---
+
+## 🔗 References
+
+- [Epieos — Email OSINT Tool](https://epieos.com)
+- [Gravatar — Global Avatar Service](https://gravatar.com)
+- [CyberChef — The Cyber Swiss Army Knife](https://gchq.github.io/CyberChef)
+- [Holehe — Email Account Checker](https://github.com/megadose/holehe)
+
+---
+
+*Writeup by Gaurav | TryHackMe Hacker Holidays 2026*
+
