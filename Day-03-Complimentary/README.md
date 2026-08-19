@@ -295,8 +295,6 @@ This ensures each guest can **only read their own row**, regardless of what tool
 <div align="center">
 
 **Hacker Holidays 2026 — Day 3**
-🔗 [TryHackMe Room](https://tryhackme.com/room/hh-complimentary-05e0b604) · 🏨 [The Byte Lotus Hotel](https://tryhackme.com/hackerholidays)
 
-*A five-star resort with a zero-star security posture.*
 
 </div>
