@@ -39,10 +39,10 @@ Every completed room earns a raffle ticket for the **$50,000+ prize pool**.
 | Day 08 | [Towel on the Sunbed](./Day-08-TowelOnSunbed/) | Web | Race Condition | ✅ |
 | Day 09 | [CryptoCabana](./Day-09-CryptoCabana/) | Cloud | Client-Side Secret Exposure | ✅ |
 | Day 10 | [The Hollow Shell](./Day-10-HollowShell/) | Web | Zip Slip + RCE | ✅ |
-| Day 11 | Infinity Pool | — | — | 🔒 |
-| Day 12 | — | — | — | 🔒 |
-| Day 13 | — | — | — | 🔒 |
-| Day 14 | — | — | — | 🔒 |
+| Day 11 | Infinity Pool | — | — |  ✅  |
+| Day 12 | After Hours| — | — |  ✅  |
+| Day 13 | The Guestbook | — | — |  ✅ |
+| Day 14 | Management Want a Word | — | — |  ✅ |
 
 > ✅ Completed · 🔒 Not yet released
 
@@ -64,6 +64,10 @@ THM-HackerHolidays-2026/
 ├── Day-08-TowelOnSunbed/
 ├── Day-09-CryptoCabana/
 └── Day-10-HollowShell/
+|__ Day-11 InfinityPool/
+└── Day-12 After Hours/
+└── Day-13 The Guest Book/
+└── Day-14 Management Want a Word/
 ## 🧠 Skills Learned
 
 | Skill | Room |
