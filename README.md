@@ -68,21 +68,7 @@ THM-HackerHolidays-2026/
 └── Day-12 After Hours/
 └── Day-13 The Guest Book/
 └── Day-14 Management Want a Word/
-## 🧠 Skills Learned
 
-| Skill | Room |
-|-------|------|
-| OSINT & Info Gathering | Day 00 — The Brochure |
-| AI Prompt Injection bypasses | Day 01 — The Concierge Knows Too Much |
-| IDOR / Source Web Enumeration | Day 02 — Room 404 |
-| AWS IAM Misconfiguration analysis | Day 03 — Complimentary |
-| Wireshark PCAP Packet Extraction | Day 04 — Packed Light |
-| PyYAML Exploit (Reverse Shell) | Day 05 — Beach Bar |
-| Metadata & Gravatar OSINT hunting | Day 06 — Overheard at Breakfast |
-| NoSQL Injection & Disk-Group PrivEsc | Day 07 — Do Not Disturb |
-| Race Condition exploitation | Day 08 — Towel on the Sunbed |
-| Azure Storage & Key Vault version recovery | Day 09 — CryptoCabana |
-| Zip Slip path traversal & RCE hooks | Day 10 — The Hollow Shell |
 ---
 
 ## 🔑 Key Takeaways
