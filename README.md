@@ -24,7 +24,7 @@ Every completed room earned a raffle ticket for the **$50,000+ prize pool**.
 
 | Day | Room Name | Category | Flag | Status |
 |-----|-----------|----------|------|--------|
-| Day 00 | [The Brochure](./Day-00-TheBrochure/) | OSINT | `THM{v3r4_kn0ws_t00_much!}` | ✅ |
+| Day 00 | [The Brochure](./Day-00-Brochure/) | OSINT | `THM{v3r4_kn0ws_t00_much!}` | ✅ |
 | Day 01 | [Towel on the Sunbed](./Day-01-TowelOnSunbed/) | Web / Race Condition | `THM{t0w3l_0n_th3_sunb3d_d0ubl3_sp3nt}` | ✅ |
 | Day 02 | [Room 404](./Day-02-Room404/) | Web / Directory Enumeration | `THM{byt3_l0tus_n3v3r_f0rg3ts}` | ✅ |
 | Day 03 | [The Concierge Knows Too Much](./Day-03-Concierge/) | AI / Prompt Injection | `THM{V3r4_1s_w4tch1ng_0veR_y0u}` | ✅ |
