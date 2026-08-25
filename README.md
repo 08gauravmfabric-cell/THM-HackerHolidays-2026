@@ -227,4 +227,4 @@ These writeups are for **educational purposes only**. All challenges were comple
 
 ---
 
-*Made with ☕ and curiosity | All 14 rooms completed! 🏆*
+*Made with ☕ and curiosity | All 14 rooms completed! 🏆* And after it got the completion certificate.
