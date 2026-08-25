@@ -222,8 +222,8 @@ These writeups are for **educational purposes only**. All challenges were comple
 ## 🔗 Links
 
 - [TryHackMe Hacker Holidays](https://tryhackme.com/hackerholidays)
-- [Byte Lotus Hotel](https://bytelotus.com)
-- [My TryHackMe Profile](#)
+
+
 
 ---
 
