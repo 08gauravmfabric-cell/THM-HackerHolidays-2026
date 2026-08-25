@@ -16,7 +16,7 @@
 | **Target IP** | 10.48.185.133 |
 | **Attack Vector** | PyYAML Deserialization RCE |
 | **Privilege Escalation** | Password leak via `ps aux` |
-| **User Flag** | `THM{y4ml_pl4yl1st_pwns_th3_b34ch}` |
+| **User Flag** | `THM{..................h}` |
 | **Root Flag** | ✅ Captured |
 
 ---
@@ -253,3 +253,4 @@ Root flag captured! 🎉
 ---
 
 *Writeup by Gaurav | TryHackMe Hacker Holidays 2026*
+Next room Overhead at breakfast
