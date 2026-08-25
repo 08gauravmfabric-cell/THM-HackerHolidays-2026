@@ -295,6 +295,7 @@ This ensures each guest can **only read their own row**, regardless of what tool
 <div align="center">
 
 **Hacker Holidays 2026 — Day 3**
+Next room Day-4 Packed light
 
 
 </div>
