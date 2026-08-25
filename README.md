@@ -36,9 +36,9 @@ Every completed room earned a raffle ticket for the **$50,000+ prize pool**.
 | Day 09 | [CryptoCabana](./Day-09-CryptoCabana/) | Cloud | Client-Side Secret Exposure / Azure | ✅ |
 | Day 10 | [The Hollow Shell](./Day-10-HollowShell/) | Web | Zip Slip / RCE | ✅ |
 | Day 11 | [Infinity Pool](./Day-11-InfinityPool/) | Web | Boot2Root / Credential Reuse | ✅ |
-| Day 12 | [After Hours](./Day-12-AfterHours/) | Forensics | WMI Persistence / Fileless Malware | ✅ |
-| Day 13 | [The Guestbook](./Day-13-TheGuestbook/) | AI | Prompt Injection / Command Injection | ✅ |
-| Day 14 | [Management Wants a Word](./Day-14-ManagementWantsAWord/) | Forensics | DPAPI / Chrome Passwords / VeraCrypt | ✅ |
+| Day 12 | [After Hours](./Day-12-Room12/) | Forensics | WMI Persistence / Fileless Malware | ✅ |
+| Day 13 | [The Guestbook](./Day-13-Room13/) | AI | Prompt Injection / Command Injection | ✅ |
+| Day 14 | [Management Wants a Word](./Day-14-Room14/) | Forensics | DPAPI / Chrome Passwords / VeraCrypt | ✅ |
 
 > ✅ All 14 rooms completed! 🏆
 
